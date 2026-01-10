@@ -20,7 +20,7 @@ function Glitchy.SelectUnselectLoop(c,sg,mg,e,tp,minc,maxc,rescon)
 			table.remove(razor,1)
 			mg2:Match(razorfunc,nil,table.unpack(razor))
 		else
-			mg2:Match(razor,nil)
+			mg2:Match(razor,nil,sg,e,tp,mg)
 		end
 	end
 	

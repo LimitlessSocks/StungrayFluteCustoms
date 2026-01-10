@@ -10,6 +10,7 @@ CATEGORY_PLACE_IN_PZONE		=	0x4
 CATEGORY_CODE_CHANGE		=	0x8
 CATEGORY_RACE_CHANGE		=	0x10
 CATEGORY_ATTRIBUTE_CHANGE	=	0x20
+CATEGORY_PLACE_IN_STZONE 	=	0x40
 
 CATEGORY_FLAG_ANCESTAGON_PLASMATAIL = 0x1
 CATEGORY_FLAG_DRAINING_PARASITE		= 0x2	--Flag for effects that can call a stat-calculating function on the handler, while already calculating the stat of the handler
@@ -206,6 +207,11 @@ Duel.GetTargetCards = function(e)
 		local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 		return tg and tg:Filter(Card.IsRelateToChain,nil) or nil
 	end
+end
+
+--Copy effects
+function Card.HasCopyableActivationEffect(c)
+	return not c:IsEquipTrap() and not c:IsTrapMonster()
 end
 
 --Custom Categories
@@ -1163,11 +1169,21 @@ Effect.SetDescription = function(e,id,str)
 	end
 end
 
+--Last element can be OPTIONS_SKIP_REDUNDANT to prevent the game from showing the selection screen if only 1 option is available
+OPTIONS_SKIP_REDUNDANT = 0
 function Glitchy.Option(id,tp,desc,...)
 	if id<2 then
 		id,tp=tp,id
 	end
 	local list={...}
+	--
+	local skip_redundant_selection=false
+	local lastpar=list[#list]
+	if lastpar==OPTIONS_SKIP_REDUNDANT then
+		skip_redundant_selection=true
+		table.remove(list)
+	end
+	--
 	local off=1
 	local ops={}
 	local opval={}
@@ -1201,9 +1217,15 @@ function Glitchy.Option(id,tp,desc,...)
 		end
 	end
 	if #ops==0 then return end
-	local op=Duel.SelectOption(tp,table.unpack(ops))+1
-	local sel=opval[op]
-	--Duel.Hint(HINT_OPSELECTED,1-tp,ops[op])
+	local sel
+	if skip_redundant_selection and #ops==1 then
+		Duel.Hint(HINT_OPSELECTED,1-tp,ops[1])
+		sel=opval[1]
+	else
+		local op=Duel.SelectOption(tp,table.unpack(ops))+1
+		sel=opval[op]
+		--Duel.Hint(HINT_OPSELECTED,1-tp,ops[op])
+	end
 	return sel
 end
 
@@ -1512,7 +1534,7 @@ function Effect.SetRelevantTimings(e,extra_timings)
 end
 function Effect.SetRelevantBattleTimings(e,extra_timings)
 	if not extra_timings then extra_timings=0 end
-	return e:SetHintTiming(extra_timings,RELEVANT_BATTLE_TIMINGS|extra_timings)
+	return e:SetHintTiming(RELEVANT_BATTLE_TIMINGS|extra_timings,RELEVANT_BATTLE_TIMINGS|extra_timings)
 end
 
 --Iterators
@@ -2367,7 +2389,8 @@ end
 --Reason
 function Effect.HasReasonArchetype(re,setcode)
 	local rc=re:GetHandler()
-	local trig_loc,trig_setcodes=Duel.GetChainInfo(0,CHAININFO_TRIGGERING_LOCATION,CHAININFO_TRIGGERING_SETCODES)
+	if not re:IsActivated() then return rc:IsSetCard(setcode) end
+	local trig_loc,trig_setcodes=Duel.GetChainInfo(Duel.GetCurrentChain(),CHAININFO_TRIGGERING_LOCATION,CHAININFO_TRIGGERING_SETCODES)
 	if not Duel.IsChainSolving() or (rc:IsRelateToEffect(re) and rc:IsLocation(trig_loc)
 		and (not rc:IsLocation(LOCATION_ONFIELD|LOCATION_REMOVED|LOCATION_EXTRA) or rc:IsFaceup())) then
 		return rc:IsSetCard(setcode)
@@ -2481,7 +2504,38 @@ function Card.IsMentionedByRitualSpell(c,spell)
 	return (spell.fit_monster and c:IsCode(table.unpack(spell.fit_monster))) or spell:ListsCode(c:GetCode())
 end
 
---Set Backrow
+--Place/Set in Backrow
+function Card.IsCanBePlacedInBackrow(c,typ,p,re,r,rp,ignore_field)
+	return (ignore_field or Duel.GetLocationCount(p,LOCATION_SZONE,rp)>0) and c:CheckUniqueOnField(p,LOCATION_SZONE) and not c:IsForbidden() --futureproof
+end
+function Duel.PlaceAsContinuousCard(g,movep,recp,owner,typ,desc,...)
+	if type(g)=="Card" then g=Group.FromCards(g) end
+	if not desc then
+		desc=typ==TYPE_SPELL and STRING_TREATED_AS_CONTINUOUS_SPELL or STRING_TREATED_AS_CONTINUOUS_TRAP
+	end
+	local effs={...}
+	local ct=0
+	for tc in g:Iter() do
+		local recp=recp and recp or tc:GetOwner()
+		if Duel.MoveToField(tc,movep,recp,LOCATION_SZONE,POS_FACEUP,tc:IsMonsterCard()) then
+			ct=ct+1
+			local e1=Effect.CreateEffect(owner)
+			e1:SetDescription(desc)
+			e1:SetCode(EFFECT_CHANGE_TYPE)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE|EFFECT_FLAG_CLIENT_HINT)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD_FACEDOWN)
+			e1:SetValue(typ|TYPE_CONTINUOUS)
+			tc:RegisterEffect(e1)
+			for _,e in ipairs(effs) do
+				e:SetReset(RESET_EVENT|RESETS_STANDARD_FACEDOWN)
+				tc:RegisterEffect(e)
+			end
+		end
+	end
+	return ct
+end
+
 function Glitchy.SetSuccessfullyFilter(c)
 	return c:IsFacedown() and c:IsLocation(LOCATION_SZONE)
 end

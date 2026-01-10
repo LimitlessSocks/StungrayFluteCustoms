@@ -261,7 +261,7 @@ function Glitchy.SpecialSummonOperation(spmod,tgcheck,f,loc1,loc2,min,max,exc,su
 							if not spmod then
 								Duel.SpecialSummon(g,sumtype,sump,recp,ignore_sumcon,ignore_revlim,pos)
 							else
-								spfunc(e,g,styp,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
+								spfunc(e,g,sumtype,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
 							end
 						end
 					end
@@ -278,7 +278,7 @@ function Glitchy.SpecialSummonOperation(spmod,tgcheck,f,loc1,loc2,min,max,exc,su
 								if not spmod then
 									Duel.SpecialSummon(g,sumtype,sump,recp,ignore_sumcon,ignore_revlim,pos)
 								else
-									spfunc(e,g,styp,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
+									spfunc(e,g,sumtype,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
 								end
 							end
 						end
@@ -294,7 +294,7 @@ function Glitchy.SpecialSummonOperation(spmod,tgcheck,f,loc1,loc2,min,max,exc,su
 								if not spmod then
 									Duel.SpecialSummon(g,sumtype,sump,recp,ignore_sumcon,ignore_revlim,pos)
 								else
-									spfunc(e,g,styp,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
+									spfunc(e,g,sumtype,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
 								end
 							end
 						end
@@ -310,7 +310,7 @@ function Glitchy.SpecialSummonOperation(spmod,tgcheck,f,loc1,loc2,min,max,exc,su
 						if not spmod then
 							Duel.SpecialSummon(g,sumtype,sump,recp,ignore_sumcon,ignore_revlim,pos)
 						else
-							spfunc(e,g,styp,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
+							spfunc(e,g,sumtype,sump,tp,ign1,ign2,pos,nil,table.unpack(spparams))
 						end
 					end
 				end

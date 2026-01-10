@@ -8,7 +8,7 @@ self_reference_effect, last_tp, last_eg, last_ep, last_ev, last_re, last_r, last
 CHK_ANCESTAGON_PLASMATAIL				=	130000138
 
 --
-local _RegisterEffect, _HasSelfToGraveCost, _HasDetachCost, _HasSelfDiscardCost, _HasSelfChangePositionCost = Card.RegisterEffect, Effect.HasSelfToGraveCost, Effect.HasDetachCost, Effect.HasSelfDiscardCost, Effect.HasSelfChangePositionCost
+local _RegisterEffect, _HasSelfToGraveCost, _HasDetachCost, _HasSelfDiscardCost, _HasSelfChangePositionCost, _HasRemainFieldCost = Card.RegisterEffect, Effect.HasSelfToGraveCost, Effect.HasDetachCost, Effect.HasSelfDiscardCost, Effect.HasSelfChangePositionCost, Effect.HasRemainFieldCost
 
 local function IsEffectCode(code0,...)
 	local x={...}
@@ -31,7 +31,7 @@ local function IsPassiveEffect(type)
 end
 
 --Workaround for cost tables
-local detach_costs, self_changepos_costs, self_discard_costs, self_tograve_costs = {}, {}, {}, {}
+local detach_costs, self_changepos_costs, self_discard_costs, self_tograve_costs, remain_field_costs = {}, {}, {}, {}, {}
 Effect.HasDetachCost = function(e)
 	return _HasDetachCost(e) or detach_costs[e:GetCost()]
 end
@@ -43,6 +43,9 @@ Effect.HasSelfDiscardCost = function(e)
 end
 Effect.HasSelfChangePositionCost = function(e)
 	return _HasSelfChangePositionCost(e) or self_changepos_costs[e:GetCost()]
+end
+Effect.HasRemainFieldCost = function(e)
+	return _HasRemainFieldCost(e) or remain_field_costs[e:GetCost()]
 end
 
 
@@ -391,6 +394,7 @@ function Card.RegisterEffect(c,eff,...)
 			if e:HasSelfDiscardCost() then self_discard_costs[newcost]=true end
 			if e:HasSelfToGraveCost() then self_tograve_costs[newcost]=true end
 			if e:HasSelfChangePositionCost() then self_changepos_costs[newcost]=true end
+			if e:HasRemainFieldCost() then remain_field_costs[newcost]=true end
 			
 			e:SetCost(newcost)
 		end
