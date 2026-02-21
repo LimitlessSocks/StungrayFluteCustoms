@@ -54,7 +54,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		local b1=already_chosen&1==0
 		local b2=already_chosen&2==0 and c:IsRelateToChain() and c:IsFaceup()
 		local b3=already_chosen&4==0 and drawct>0 and Duel.IsPlayerCanDraw(tp,drawct)
-		if brk and (not (b1 or b2 or b3) or Duel.SelectYesNo(tp,STRING_ASK_APPLY_ADDITIONAL)) then
+		if brk and (not (b1 or b2 or b3) or not Duel.SelectYesNo(tp,STRING_ASK_APPLY_ADDITIONAL)) then
 			break
 		end
 		local op=xgl.Option(id,tp,1,b1,b2,b3)
